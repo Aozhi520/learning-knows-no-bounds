@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: PyTorch Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,        // ← 关键！设为 false 才能进入 PyTorch 源码
+            "subProcess": true
+        }
+    ]
+}
