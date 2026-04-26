@@ -168,18 +168,19 @@ class RunManager():
 params = OrderedDict(
     lr = [0.01],
     batch_size = [1000,2000],
-    shuffle = [True, False],
-    num_workers = [0,1,2]
+    num_workers = [0,1,2],
+    device = ['cuda', 'cpu']
 )
 
 m = RunManager()
 for run in RunBuilder.get_runs(params):
     print(run)
-    network = Network()
+
+    device = torch.device(run.device) # get device
+    network = Network().to(device)  # move to device
     train_loader = DataLoader(
         train_set,
         batch_size=run.batch_size,
-        shuffle=run.shuffle,
         num_workers=run.num_workers
     )
     optimizer = optim.Adam(network.parameters(),lr=run.lr)
@@ -189,8 +190,9 @@ for run in RunBuilder.get_runs(params):
         m.begin_epoch()
         for batch in train_loader:
             
-            images,labels = batch
-            
+            images = batch[0].to(device) # move to device
+            labels = batch[1].to(device) # move to device
+
             preds = network(images)
 
             loss = F.cross_entropy(preds,labels)
