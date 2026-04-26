@@ -168,7 +168,8 @@ class RunManager():
 params = OrderedDict(
     lr = [0.01],
     batch_size = [1000,2000],
-    shuffle = [True, False]
+    shuffle = [True, False],
+    num_workers = [0,1,2]
 )
 
 m = RunManager()
@@ -177,8 +178,9 @@ for run in RunBuilder.get_runs(params):
     network = Network()
     train_loader = DataLoader(
         train_set,
-        batch_size =run.batch_size,
-        shuffle = run.shuffle
+        batch_size=run.batch_size,
+        shuffle=run.shuffle,
+        num_workers=run.num_workers
     )
     optimizer = optim.Adam(network.parameters(),lr=run.lr)
 
