@@ -39,11 +39,42 @@ class Network(nn.Module):
 
     return t
 
+#计算标准化的mean和std
 train_set = torchvision.datasets.FashionMNIST(root='./data',train=True,
                                 download=True,
                                 transform=transforms.Compose([
         transforms.ToTensor()
     ]))
+                      #easy way
+# loader = DataLoader(train_set,batch_size=len(train_set),num_workers=1)
+# data = next(iter(loader))
+# print(data[0].shape)
+# data[0].mean(),data[0].std()
+
+                      #hard way
+# loader = DataLoader(train_set,batch_size=1000,num_workers=1)
+# num_of_pixels = 0             
+# for batch in loader : num_of_pixels = len(train_set) * 28 * 28
+
+# total_sum = 0
+# for batch in loader: total_sum += batch[0].sum()
+# mean = total_sum / num_of_pixels
+
+# sum_of_squared_error = 0 #方差
+# for batch in loader: sum_of_squared_error += ((batch[0]-mean).pow(2)).sum()
+# std = torch.sqrt(sum_of_squared_error / num_of_pixels )
+
+train_set_normal = torchvision.datasets.FashionMNIST(root='./data',train=True,
+                                download=True,
+                                transform=transforms.Compose([
+        transforms.ToTensor(), 
+        transforms.Normalize(mean=(0.2860), std=(0.3530)) #FashionMNIST数据集的mean和std
+    ]))
+
+trainset = {
+  'not_normal': train_set ,
+  'normal': train_set_normal
+}
 
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -98,9 +129,9 @@ class RunManager():
 
     images, labels = next(iter(self.loader))
     grid = torchvision.utils.make_grid(images)
-
+    
     self.tb.add_image('images', grid)
-    self.tb.add_graph(self.network, images)
+    self.tb.add_graph(self.network, images.to(run.device))
 
   def end_run(self):
     self.tb.close()
@@ -168,8 +199,9 @@ class RunManager():
 params = OrderedDict(
     lr = [0.01],
     batch_size = [1000,2000],
-    num_workers = [0,1,2],
-    device = ['cuda', 'cpu']
+    num_workers = [0,1],
+    device = ['cuda', 'cpu'],
+    trainset = ['not_normal', 'normal']
 )
 
 m = RunManager()
@@ -179,7 +211,7 @@ for run in RunBuilder.get_runs(params):
     device = torch.device(run.device) # get device
     network = Network().to(device)  # move to device
     train_loader = DataLoader(
-        train_set,
+        trainset[run.trainset],
         batch_size=run.batch_size,
         num_workers=run.num_workers
     )

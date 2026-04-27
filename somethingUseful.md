@@ -1,5 +1,19 @@
 # 一些有用的知识
 
+# git以及github的使用
+
+Git常用命令以及SSH配置
+
+![image-20260426214752235](somethingUseful.assets/image-20260426214752235.png)
+
+git常用命令
+
+
+
+
+
+
+
 # gitignore的使用
 
 https://www.bilibili.com/video/BV1fp4y1u7aK/?spm_id_from=333.337.search-card.all.click&vd_source=83e86f01de6b9a88af5641a22bd8ad7b
