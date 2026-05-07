@@ -409,21 +409,70 @@ yield表达式：包含至少一个逗号的表达式列表将生成一个元组
 
 ![image-20260506212105559](d2l笔记.assets/image-20260506212105559.png)
 
+`yield` 的本质：它是一个"暂停按钮"
+
+```plain
+普通函数 (return)          yield 函数
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+开始 → 干活 → 结束          开始 → 干活 → 【暂停】
+           ↓ 一次性给结果              ↓ 给一点结果
+        返回所有结果                  保存现场，下次继续
+```
+
+代码执行流程：
+
+| 步骤 | 发生了什么                | 你的数据状态                         |
+| ---- | ------------------------- | ------------------------------------ |
+| 1    | 调用 `data_iter(2, X, y)` | 函数开始执行，打乱索引               |
+| 2    | 第一次循环，`i=0`         | 取出第1个batch的数据                 |
+| 3    | 遇到 `yield`              | **暂停！** 把第1个batch"吐"给你      |
+| 4    | 你在别处使用完这个batch后 | 函数**从暂停处继续**，不是从头开始！ |
+| 5    | `i=2`                     | 取出第2个batch的数据                 |
+| 6    | 又遇到 `yield`            | **又暂停！** 把第2个batch"吐"给你    |
+| 7    | ...                       | 以此类推，直到所有batch都给完        |
+
+为什么要用 `yield` 而不是 `return`？
+
+假设你有 **10000 条数据**，`batch_size=32`，那就是约 **313 个 batch**：
+
+```python
+# ❌ 如果用 return，你需要一次性把所有 313 个 batch 装进一个巨大列表
+#    内存爆炸！
+def bad_data_iter():
+    all_batches = []  # 巨大的列表
+    for i in range(313):
+        all_batches.append(...)  # 内存占用越来越大
+    return all_batches  # 一次性全给你
+
+# ✅ 用 yield，每次只给你 1 个 batch，用完就扔
+#    内存友好！
+def good_data_iter():
+    for i in range(313):
+        yield ...  # 只生成当前这一个batch
+```
+
+实际使用时怎么配合？
+
+`yield` 让 `data_iter` 变成了一个**生成器（Generator）**，你要么用 `for` 循环遍历它，要么用 `next()` 一个一个取：
+
+```python
+# 方式1：for循环（最常用，训练模型时就这么写）
+for X_batch, y_batch in data_iter(32, features, labels):
+    # 每次循环，函数就从上次暂停的地方继续
+    # 给你下一个batch
+    pred = model(X_batch)
+    loss = criterion(pred, y_batch)
+    ...
+
+# 方式2：手动一个一个取（了解原理）
+gen = data_iter(32, features, labels)
+first_batch = next(gen)   # 拿到第1个batch，函数暂停
+second_batch = next(gen)  # 函数继续，拿到第2个batch
+```
+
 
 
 报错解决：
-
-1. **RuntimeError**: expected scalar type Float but found Long
-
-![image-20260506215741316](d2l笔记.assets/image-20260506215741316.png)
-
-![image-20260506215759951](d2l笔记.assets/image-20260506215759951.png)
-
-修改过后解决
-
-![image-20260506215818521](d2l笔记.assets/image-20260506215818521.png)
-
-
 
 
 
