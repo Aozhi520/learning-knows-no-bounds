@@ -403,6 +403,8 @@ tensor([ 6, 15])                    # shape=(2,)
 
 # 线性回归
 
+## 线性回归的从零实现
+
 **生成器：是一个用于创建迭代器的简单而强大的工具。它们的写法类似于标准的函数，但当它们要返回数据时会使用yield语句，每次在生成器上调用next()时，它会从上次离开的位置恢复执行（它会记住上次执行语句时的所有数据值）。**
 
 yield表达式：包含至少一个逗号的表达式列表将生成一个元组，元组的长度就是列表中表达式的数量。 表达式将从左至右被求值。
@@ -597,12 +599,6 @@ print(result.shape)         # ✅ torch.Size([5, 1]) —— 正确！
 
 
 
-
-
-
-
-
-
 报错解决：
 
 1.**TypeError**: unsupported operand type(s) for *: 'float' and 'NoneType'
@@ -626,6 +622,63 @@ print(result.shape)         # ✅ torch.Size([5, 1]) —— 正确！
 修改后恢复正常
 
 ![image-20260508201747628](d2l笔记.assets/image-20260508201747628.png)
+
+
+
+## 线性回归的简洁实现
+
+1.关于python语法的迭代器和可迭代对象的认识
+
+![image-20260508214213591](d2l笔记.assets/image-20260508214213591.png)
+
+上面的data_iter是用Dataloader创造的**可迭代对象**(官方文档的定义)，而在python中，迭代器和可迭代对象是两个不同的概念
+
+| 概念                       | 定义                                | 特征                             | 能否直接用 `next()`     |
+| -------------------------- | ----------------------------------- | -------------------------------- | ----------------------- |
+| **Iterable**（可迭代对象） | 实现了 `__iter__()` 方法            | 可以被 `for` 循环遍历            | ❌ **不能直接 `next()`** |
+| **Iterator**（迭代器）     | 实现了 `__iter__()` 和 `__next__()` | 可以逐个产出元素，会记录遍历状态 | ✅ **可以直接 `next()`** |
+
+**DataLoader 的定位**
+
+`DataLoader` 是 **Iterable**，不是 **Iterator**：
+
+```python
+from torch.utils.data import DataLoader
+
+loader = DataLoader(dataset, batch_size=64)
+
+print(hasattr(loader, '__iter__'))  # True  ← 是可迭代对象
+print(hasattr(loader, '__next__'))  # False ← 不是迭代器！
+```
+
+`next()` 函数要求传入的是 **Iterator**，而 `DataLoader` 只是 **Iterable**，所以需要转换：
+
+```python
+# 错误！直接对 Iterable 用 next()
+next(loader)        # ❌ TypeError: 'DataLoader' object is not an iterator
+
+# 正确！先用 iter() 获取 Iterator
+iterator = iter(loader)   # 返回一个内部迭代器对象（如 _BaseDataLoaderIter 的子类）
+next(iterator)            # ✅ 取出第一个 batch
+```
+
+可迭代对象可直接用于for循环，**当一个可迭代对象作为参数被传给内置函数 [`iter()`](https://docs.python.org/zh-cn/3/library/functions.html#iter) 时，它会返回该对象的迭代器。**
+
+因为for循环只认迭代器，所以在for循环中，**内部自动帮你调了iter()**：
+
+```python
+for batch in loader:      # Python 实际执行的是：
+    ...                   # for batch in iter(loader):
+                          #     ...
+```
+
+**`DataLoader` 是可迭代对象（Iterable），不是迭代器（Iterator）。`iter()` 是"工厂"，把可迭代对象"加工"成迭代器，然后才能用 `next()` 逐个取值。`for` 循环会自动调用 `iter()`，所以看不到这个过程。**
+
+
+
+
+
+
 
 
 
