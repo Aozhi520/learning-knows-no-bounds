@@ -41,3 +41,11 @@ https://www.bilibili.com/video/BV1fp4y1u7aK/?spm_id_from=333.337.search-card.all
 这条命令会从git的索引中把对应文件夹删除，告诉git不用再跟踪了，同时不会删除本地文件
 
 接着再commit然后push就能在远程仓库中正常删掉这些文件了
+
+
+
+
+
+# 读论文思路
+
+![image-20260620154201629](somethingUseful.assets/image-20260620154201629.png)
