@@ -10,6 +10,30 @@ git常用命令
 
 
 
+## git使用时问题解决
+
+1.上传到github时报错![image-20261012131004817](C:\Users\aozhi\AppData\Roaming\Typora\typora-user-images\image-20261012131004817.png)
+
+原因：**开着代理/VPN，但 git 没走代理** 
+
+浏览器能开 GitHub 是因为浏览器走了系统代理或插件代理，但 **git 默认不读系统代理**，需要自己配置
+
+首先查看代理在本地的什么端口，如果梯子有的话就看梯子，或者
+
+如果梯子开了"系统代理"模式，Windows 里会直接写明地址和端口：
+
+**设置 → 网络和 Internet → 代理 → 手动设置代理**
+
+找到代理地址和端口，然后终端运行
+
+```powershell
+git config --global http.proxy 代理地址:端口号
+```
+
+然后再push就ok了
+
+
+
 
 
 
